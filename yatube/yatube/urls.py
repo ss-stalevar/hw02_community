@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 # anfisa/urls.py (главный файл url проекта)
-# По умолчанию в проект Django подключена система администрирования 
+# По умолчанию в проект Django подключена система администрирования
 from django.contrib import admin
 # Функция include позволит использовать path() из других файлов.
 # Импортируем!
