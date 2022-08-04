@@ -1,25 +1,22 @@
-{% extends "base.html" %}
-{% block title %}Записи сообщества {{ group }}{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}
+  {{  group.title  }}
+{% endblock title %}
+
 {% block content %}
-<div class="container">
-    <h1>{{ group }}</h1>
-    <p>{{ group.description }}</p>
-    <div class="container py-5">
-  {% for post in posts %}
-    <ul>
-      <li>
-        Автор: {{ post.author.get_full_name }}
-      </li>
-      <li>
-        Дата публикации: {{ post.pub_date|date:"d E Y" }}
-      </li>
-    </ul>
-    <p>{{ post.text }}</p> 
-    {% if post.group.slug %}
-      <a href="{% url 'posts:group_list' post.group.slug %}">все записи группы</a>
-    {% endif %}
-    {% if not forloop.last %}<hr>{% endif %}
-  {% endfor %} 
-</div>  
-</div>
-{% endblock %}
+      <div class="container py-5">        
+        <h1>Записи сообщества: {{  group.title  }}</h1>
+        <p>{{  group.description  }}</p>
+        <!-- все посты перебираются в цикле -->
+        {% for post in page %}
+            {% include "includes/post_item.html" with post=post %}
+        {% endfor %}
+        <!-- нет черты после последнего поста -->
+        <!-- если записей больше 10 -- подключён паджинатор -->
+        {% if page.has_other_pages %}
+            {% include "includes/paginator.html" with page_obj=page paginator=paginator%}
+        {% endif %}
+      </div>
+      
+{% endblock content %}
