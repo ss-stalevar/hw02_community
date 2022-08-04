@@ -1,9 +1,10 @@
-from django.core.paginator import Paginator
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import get_user_model
-from posts.models import Post, Group
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404, redirect, render
+
 from posts.forms import PostForm
+from posts.models import Group, Post
 
 User = get_user_model()
 
@@ -13,7 +14,7 @@ def index(request):
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    context={
+    context = {
         'page': page,
         'paginator': paginator,
     }
@@ -45,20 +46,17 @@ def post_detail(request, username, post_id):
 
 def group_list(request, slug):
     group = get_object_or_404(Group, slug=slug)
-<<<<<<< HEAD
-    posts = group.posts.all()[:10]
-=======
     posts = group.posts.all()
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
->>>>>>> student
     context = {
         'group': group,
         'paginator': paginator,
         'page': page,
     }
     return render(request, 'posts/group_list.html', context)
+
 
 @login_required
 def post_create(request):
