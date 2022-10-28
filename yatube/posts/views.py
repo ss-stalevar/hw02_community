@@ -1,94 +1,38 @@
-from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-from django.shortcuts import get_object_or_404, redirect, render
+# yatube/posts.py
+from django.shortcuts import HttpResponse, render, get_object_or_404
+from http.client import HTTPResponse
+from .models import Post, Group
 
-from posts.forms import PostForm
-from posts.models import Group, Post
-
-User = get_user_model()
-
-
+# Main Page
 def index(request):
-    posts = Post.objects.all()
-    paginator = Paginator(posts, 10)
-    page_number = request.GET.get('page')
-    page = paginator.get_page(page_number)
+    #text = '<h6>Это главная страница проекта Yatube</h6>'
+    
+    # Одна строка вместо тысячи слов на SQL:
+    # в переменную posts будет сохранена выборка из 10 объектов модели Post,
+    # отсортированных по полю pub_date по убыванию (от больших значений к меньшим)
+    posts = Post.objects.order_by('-pub_date')[:10]
+    # В словаре context отправляем информацию в шаблон
     context = {
-        'page': page,
-        'paginator': paginator,
+        'posts' : posts,
     }
-    return render(request, 'posts/index.html', context)
+    template = 'posts/index.html'
+    return render(request, template, context)
 
-
-def profile(request, username):
-    user = get_object_or_404(User, username=username)
-    posts = user.posts.all()
-    paginator = Paginator(posts, 10)
-    page_number = request.GET.get('page')
-    page = paginator.get_page(page_number)
-    context = {
-        'user': user,
-        'page': page,
-    }
-    return render(request, 'posts/profile.html', context)
-
-
-def post_detail(request, username, post_id):
-    user = get_object_or_404(User, username=username)
-    post = get_object_or_404(Post, pk=post_id)
-    context = {
-        'user': user,
-        'post': post,
-    }
-    return render(request, 'posts/post_detail.html', context)
-
-
-def group_list(request, slug):
+# Group Posts
+def group_posts(request, slug):
+    # Функция get_object_or_404 получает по заданным критериям объект 
+    # из базы данных или возвращает сообщение об ошибке, если объект не найден.
+    # В нашем случае в переменную group будут переданы объекты модели Group,
+    # поле slug у которых соответствует значению slug в запросе
     group = get_object_or_404(Group, slug=slug)
-    posts = group.posts.all()
-    paginator = Paginator(posts, 10)
-    page_number = request.GET.get('page')
-    page = paginator.get_page(page_number)
+    
+    # Метод .filter позволяет ограничить поиск по критериям.
+    # Это аналог добавления
+    # условия WHERE group_id = {group_id}
+    posts = Post.objects.filter(group=group).order_by('-pub_date')[:10]
     context = {
         'group': group,
-        'paginator': paginator,
-        'page': page,
+        'posts': posts,
+        'slug' : slug,
     }
-    return render(request, 'posts/group_list.html', context)
-
-
-@login_required
-def post_create(request):
-    if request.method == "POST":
-        form = PostForm(data=request.POST)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.save()
-            return redirect('posts:index')
-        return render(request, "posts/post_create.html", {"form": form})
-    form = PostForm()
-    return render(request, "posts/post_create.html", {"form": form})
-
-
-def post_edit(request, username, post_id):
-    is_edit = get_object_or_404(Post, pk=post_id)
-    if is_edit.author == request.user:
-        if request.method == "POST":
-            form = PostForm(request.POST, instance=is_edit)
-            if form.is_valid():
-                form.save()
-                return redirect('posts:post_detail', username, post_id)
-        form = PostForm(instance=is_edit)
-        return render(
-            request,
-            "posts/post_create.html",
-            {
-                "form": form,
-                "username": username,
-                "post_id": post_id,
-                "is_edit": is_edit
-            }
-        )
-    return redirect('posts:post_detail', username, post_id)
+    return render(request, 'posts/group_list.html', context) 
